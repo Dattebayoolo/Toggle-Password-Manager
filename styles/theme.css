@@ -1,0 +1,207 @@
+/* Toggle Password Manager - Distinctive Emerald Theme (Google-Style Structure without Google Blue) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* =========================================================
+     Toggle Dark Theme (Default) - Obsidian & Cyber Emerald
+     ========================================================= */
+  --brand-primary: #10b981;             /* Cyber Emerald */
+  --brand-primary-hover: #34d399;       /* Mint Glow */
+  --brand-on-primary: #022c22;
+  --brand-primary-container: #064e3b;   /* Deep Emerald Capsule */
+  --brand-on-primary-container: #a7f3d0;
+
+  --accent-teal: #14b8a6;
+  --accent-cyan: #06b6d4;
+
+  --semantic-red: #f87171;
+  --semantic-red-container: #501311;
+  --semantic-on-red-container: #fecaca;
+
+  --semantic-green: #34d399;
+  --semantic-green-container: #064e3b;
+  --semantic-on-green-container: #a7f3d0;
+
+  --semantic-yellow: #fbbf24;
+  --semantic-yellow-container: #4f3200;
+  --semantic-on-yellow-container: #fef3c7;
+
+  /* App Surfaces - Dark */
+  --bg-app: #11141a;
+  --bg-sidebar: #171b23;
+  --bg-card: #1c212b;
+  --bg-card-hover: #242a37;
+  --bg-surface-elevated: #242a37;
+  --bg-surface-variant: #28303f;
+  --bg-input: #171b23;
+  --bg-search: #171b23;
+  --bg-search-focus: #242a37;
+  --bg-overlay: rgba(8, 10, 14, 0.75);
+
+  --border-subtle: #293140;
+  --border-card: #2c3545;
+  --border-focus: #10b981;
+  --border-highlight: rgba(16, 185, 129, 0.25);
+
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-dim: #4b5563;
+
+  --primary: var(--brand-primary);
+  --primary-hover: var(--brand-primary-hover);
+  --on-primary: var(--brand-on-primary);
+  --primary-container: var(--brand-primary-container);
+  --on-primary-container: var(--brand-on-primary-container);
+
+  --status-safe: var(--semantic-green);
+  --status-warning: var(--semantic-yellow);
+  --status-danger: var(--semantic-red);
+  --status-info: var(--accent-teal);
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 10px 0 rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.6);
+  --shadow-search: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+
+  /* Transitions */
+  --ease-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --trans-fast: 150ms var(--ease-standard);
+  --trans-smooth: 250ms var(--ease-standard);
+
+  /* Radii */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+}
+
+/* =========================================================
+   Toggle White (Light) Theme - Clean Mint & Fresh Slate
+   ========================================================= */
+[data-theme="light"],
+html[data-theme="light"] {
+  --brand-primary: #059669;             /* Vibrant Deep Emerald */
+  --brand-primary-hover: #047857;
+  --brand-on-primary: #ffffff;
+  --brand-primary-container: #d1fae5;   /* Crisp Mint Container */
+  --brand-on-primary-container: #065f46;
+
+  --accent-teal: #0d9488;
+  --accent-cyan: #0284c7;
+
+  --semantic-red: #dc2626;
+  --semantic-red-container: #fee2e2;
+  --semantic-on-red-container: #7f1d1d;
+
+  --semantic-green: #059669;
+  --semantic-green-container: #d1fae5;
+  --semantic-on-green-container: #065f46;
+
+  --semantic-yellow: #d97706;
+  --semantic-yellow-container: #fef3c7;
+  --semantic-on-yellow-container: #78350f;
+
+  /* App Surfaces - White */
+  --bg-app: #f9fafb;
+  --bg-sidebar: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f3f4f6;
+  --bg-surface-elevated: #ffffff;
+  --bg-surface-variant: #e5e7eb;
+  --bg-input: #f3f4f6;
+  --bg-search: #e5e7eb;
+  --bg-search-focus: #ffffff;
+  --bg-overlay: rgba(17, 24, 39, 0.45);
+
+  --border-subtle: #e5e7eb;
+  --border-card: #d1d5db;
+  --border-focus: #059669;
+  --border-highlight: rgba(5, 150, 105, 0.18);
+
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-dim: #9ca3af;
+
+  --primary: var(--brand-primary);
+  --primary-hover: var(--brand-primary-hover);
+  --on-primary: var(--brand-on-primary);
+  --primary-container: var(--brand-primary-container);
+  --on-primary-container: var(--brand-on-primary-container);
+
+  --status-safe: var(--semantic-green);
+  --status-warning: var(--semantic-yellow);
+  --status-danger: var(--semantic-red);
+  --status-info: var(--accent-teal);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-search: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  transition: background-color var(--trans-smooth), color var(--trans-smooth);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+::selection {
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+}
+
+/* Subtle scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-card);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

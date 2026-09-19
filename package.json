@@ -1,0 +1,20 @@
+{
+  "name": "toggle-password-manager",
+  "version": "1.0.0",
+  "description": "Privacy-first local password manager alternative to Google Password Manager with AES-256-GCM encryption and tactile toggles.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "password-manager",
+    "google-password-manager-alternative",
+    "local-first",
+    "aes-256-gcm",
+    "zero-knowledge",
+    "privacy"
+  ],
+  "author": "Toggle Security",
+  "license": "MIT"
+}

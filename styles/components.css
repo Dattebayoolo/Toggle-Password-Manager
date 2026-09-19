@@ -1,0 +1,635 @@
+/* Toggle Password Manager - Component Styling & Tactile Micro-Interactions */
+
+/* =========================================================
+   1. The Signature Tactile Toggle Switch
+   ========================================================= */
+.toggle-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--bg-surface-variant);
+  transition: background-color var(--trans-smooth), border-color var(--trans-smooth), box-shadow var(--trans-smooth);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--border-card);
+}
+
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--text-muted);
+  transition: transform var(--trans-smooth), width var(--trans-smooth), height var(--trans-smooth), background-color var(--trans-smooth);
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 12px var(--border-highlight);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translate(20px, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: var(--on-primary);
+}
+
+/* Mini Toggle Variant for lists & compact rows */
+.toggle-switch.mini {
+  width: 38px;
+  height: 22px;
+}
+.toggle-switch.mini .toggle-slider {
+  border-width: 1.5px;
+}
+.toggle-switch.mini .toggle-slider::before {
+  height: 12px;
+  width: 12px;
+  left: 3px;
+}
+.toggle-switch.mini input:checked + .toggle-slider::before {
+  transform: translate(16px, -50%);
+  width: 16px;
+  height: 16px;
+}
+
+/* =========================================================
+   2. Modern Pill & Tonal Buttons
+   ========================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--trans-fast), box-shadow var(--trans-fast), transform var(--trans-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Filled Primary (Emerald Pill) */
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+/* Tonal Button (Emerald Tint Capsule) */
+.btn-tonal {
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+}
+.btn-tonal:hover {
+  filter: brightness(0.95);
+}
+
+/* Outlined / Secondary Button */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-card);
+}
+.btn-secondary:hover {
+  background-color: var(--bg-card-hover);
+}
+
+/* Text / Ghost Button */
+.btn-ghost {
+  background: transparent;
+  color: var(--primary);
+  border: none;
+  padding: 0 12px;
+}
+.btn-ghost:hover {
+  background-color: rgba(16, 185, 129, 0.08);
+}
+
+/* Danger Button */
+.btn-danger {
+  background-color: var(--semantic-red-container);
+  color: var(--semantic-on-red-container);
+  border-color: transparent;
+}
+.btn-danger:hover {
+  filter: brightness(1.1);
+}
+
+/* Icon Action Buttons */
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color var(--trans-fast), color var(--trans-fast);
+}
+.btn-icon:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+.btn-icon:active {
+  transform: scale(0.92);
+}
+
+/* Floating Action Button Style for Add Password */
+.btn-fab {
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+  box-shadow: var(--shadow-md);
+  font-weight: 600;
+  font-size: 0.925rem;
+}
+.btn-fab:hover {
+  box-shadow: var(--shadow-lg);
+  filter: brightness(1.05);
+}
+
+/* =========================================================
+   3. Inputs & Forms
+   ========================================================= */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-field {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.925rem;
+  transition: border-color var(--trans-fast), box-shadow var(--trans-fast), background-color var(--trans-fast);
+}
+
+textarea.input-field {
+  height: auto;
+  padding: 12px 16px;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--border-highlight);
+  background-color: var(--bg-card);
+}
+
+.input-field.font-mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.input-action-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--trans-fast), color var(--trans-fast);
+}
+.input-action-btn:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.input-actions-group {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* =========================================================
+   4. Strength Meter & Entropy Bar
+   ========================================================= */
+.strength-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.strength-bar-track {
+  display: flex;
+  gap: 4px;
+  height: 4px;
+  width: 100%;
+}
+
+.strength-segment {
+  flex: 1;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background-color: var(--border-card);
+  transition: background-color var(--trans-smooth);
+}
+
+.strength-label-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.775rem;
+}
+
+.strength-text {
+  font-weight: 600;
+}
+
+.crack-time-estimate {
+  color: var(--text-muted);
+}
+
+/* Levels */
+.strength-level-0 .strength-segment:nth-child(1) { background-color: var(--semantic-red); }
+.strength-level-0 .strength-text { color: var(--semantic-red); }
+
+.strength-level-1 .strength-segment:nth-child(-n+2) { background-color: #f97316; }
+.strength-level-1 .strength-text { color: #f97316; }
+
+.strength-level-2 .strength-segment:nth-child(-n+3) { background-color: var(--semantic-yellow); }
+.strength-level-2 .strength-text { color: var(--semantic-yellow); }
+
+.strength-level-3 .strength-segment:nth-child(-n+4) { background-color: var(--accent-teal); }
+.strength-level-3 .strength-text { color: var(--accent-teal); }
+
+.strength-level-4 .strength-segment:nth-child(-n+5) { background-color: var(--semantic-green); }
+.strength-level-4 .strength-text { color: var(--semantic-green); }
+
+/* =========================================================
+   5. Security Checkup Dial & Badges
+   ========================================================= */
+.security-score-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.security-dial-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.security-dial-svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.security-dial-bg {
+  stroke: var(--bg-surface-variant);
+  stroke-width: 6;
+  fill: none;
+}
+
+.security-dial-progress {
+  stroke: var(--semantic-green);
+  stroke-width: 6;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke-dashoffset 0.8s ease;
+}
+
+.security-dial-score {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.badge-safe {
+  background-color: var(--semantic-green-container);
+  color: var(--semantic-on-green-container);
+}
+
+.badge-warning {
+  background-color: var(--semantic-yellow-container);
+  color: var(--semantic-on-yellow-container);
+}
+
+.badge-danger {
+  background-color: var(--semantic-red-container);
+  color: var(--semantic-on-red-container);
+}
+
+.badge-info {
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+}
+
+/* =========================================================
+   6. Modals & Dialogs
+   ========================================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--bg-overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--trans-smooth);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-box {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.96) translateY(8px);
+  transition: transform var(--trans-smooth);
+  overflow: hidden;
+}
+
+.modal-overlay.active .modal-box {
+  transform: scale(1) translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 16px 24px;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-body {
+  padding: 8px 24px 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 16px 24px 24px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* =========================================================
+   7. Snackbars & Alerts
+   ========================================================= */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background-color: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  min-width: 300px;
+  max-width: 440px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: snackbarIn 0.2s var(--ease-standard);
+}
+
+.toast.toast-success {
+  border-left: 4px solid var(--semantic-green);
+}
+.toast.toast-danger {
+  border-left: 4px solid var(--semantic-red);
+}
+.toast.toast-info {
+  border-left: 4px solid var(--primary);
+}
+
+.toast.toast-hiding {
+  animation: snackbarOut 0.2s forwards var(--ease-standard);
+}
+
+@keyframes snackbarIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes snackbarOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+}
+
+/* Top Clipboard Auto-Clear Banner */
+.clipboard-banner {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-60px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-md);
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  z-index: 1500;
+  transition: transform var(--trans-smooth);
+}
+
+.clipboard-banner.active {
+  transform: translateX(-50%) translateY(0);
+}
+
+.clipboard-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+/* =========================================================
+   8. Slider Control for Generator
+   ========================================================= */
+.range-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.range-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--border-card);
+  outline: none;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--trans-fast);
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.range-value-pill {
+  min-width: 40px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 4px 8px;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: var(--radius-sm);
+}
