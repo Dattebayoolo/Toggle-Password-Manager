@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "Privacy-first local password manager alternative to Google Password Manager with AES-256-GCM encryption and tactile toggles.",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node test/verify.js"
   },
   "keywords": [
     "password-manager",

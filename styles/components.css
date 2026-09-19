@@ -633,3 +633,342 @@ textarea.input-field {
   color: var(--on-primary-container);
   border-radius: var(--radius-sm);
 }
+
+/* =========================================================
+   9. Category-Specific Fields & Grids
+   ========================================================= */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-row.two-col {
+  grid-template-columns: 1fr 1fr;
+}
+
+.form-row.three-col {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.category-fields-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeIn 0.2s ease;
+}
+
+.card-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  background: var(--bg-surface-variant);
+  color: var(--text-primary);
+  border: 1px solid var(--border-card);
+}
+
+.card-brand-badge.visa {
+  background: rgba(26, 31, 113, 0.2);
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.card-brand-badge.mastercard {
+  background: rgba(235, 0, 27, 0.15);
+  color: #f97316;
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.card-brand-badge.amex {
+  background: rgba(0, 111, 207, 0.15);
+  color: #0ea5e9;
+  border-color: rgba(14, 165, 233, 0.4);
+}
+
+.btn-danger-tonal {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--status-danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger-tonal:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: var(--status-danger);
+}
+
+.trash-warning-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* =========================================================
+   Phase 3: Biometric Unlock Button
+   ========================================================= */
+.btn-biometric-unlock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 18px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.btn-biometric-unlock:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.btn-biometric-unlock:active {
+  transform: translateY(0);
+}
+
+/* Subtle biometric pulse ring */
+.btn-biometric-unlock::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  opacity: 0;
+  animation: biometric-pulse 2s infinite;
+}
+
+@keyframes biometric-pulse {
+  0% { transform: translateY(-50%) scale(0.7); opacity: 0.8; }
+  70% { transform: translateY(-50%) scale(1.5); opacity: 0; }
+  100% { transform: translateY(-50%) scale(1.5); opacity: 0; }
+}
+
+.biometric-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.biometric-divider::before,
+.biometric-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+/* =========================================================
+   Phase 3: Live Breach Scan Progress Bar
+   ========================================================= */
+.breach-scan-panel {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.breach-scan-progress-track {
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.breach-scan-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* Breach count badge on results */
+.breach-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 999px;
+  color: var(--status-danger);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+}
+
+.breach-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 8px;
+  gap: 10px;
+}
+
+.breach-scan-all-clear {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  color: var(--status-safe);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* =========================================================
+   Phase 3: Emergency Kit Word Grid
+   ========================================================= */
+.emergency-word-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.emergency-word-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.emergency-word-index {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  min-width: 16px;
+}
+
+.emergency-word-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.03em;
+}
+
+/* =========================================================
+   Phase 3: @media print — Emergency Recovery Sheet
+   ========================================================= */
+@media print {
+  /* Hide everything except the printable emergency container */
+  body > *:not(#emergency-print-root) {
+    display: none !important;
+  }
+
+  #emergency-print-root {
+    display: block !important;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #000;
+    background: #fff;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  .print-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+
+  .print-header h1 {
+    font-size: 22pt;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .print-header p {
+    font-size: 10pt;
+    color: #444;
+    margin: 0;
+  }
+
+  .print-word-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 24px 0;
+  }
+
+  .print-word-cell {
+    border: 1.5px solid #333;
+    border-radius: 6px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    page-break-inside: avoid;
+  }
+
+  .print-word-num {
+    font-size: 8pt;
+    font-weight: bold;
+    color: #666;
+    min-width: 18px;
+  }
+
+  .print-word-val {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13pt;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+  }
+
+  .print-instructions {
+    border: 1.5px solid #999;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-top: 20px;
+    font-size: 9pt;
+    color: #333;
+    line-height: 1.6;
+  }
+
+  .print-meta {
+    margin-top: 18px;
+    font-size: 8pt;
+    color: #777;
+    text-align: center;
+  }
+
+  @page {
+    margin: 20mm;
+    size: A4;
+  }
+}

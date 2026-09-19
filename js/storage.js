@@ -65,6 +65,7 @@ export class StorageEngine {
     // Initial empty vault array
     const emptyVault = [];
     const encrypted = await CryptoEngine.encrypt(JSON.stringify(emptyVault), key);
+    const encryptedRecoveryPhrase = await CryptoEngine.encrypt(recoveryPhrase, key);
 
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
@@ -75,6 +76,7 @@ export class StorageEngine {
         saltHex: saltHex,
         verifierHash: verifierHash,
         recoveryHash: recoveryHash,
+        encryptedRecoveryPhrase: encryptedRecoveryPhrase,
         createdAt: new Date().toISOString(),
         version: 1
       });
@@ -235,6 +237,78 @@ export class StorageEngine {
       tx.oncomplete = () => resolve();
       tx.onerror = (e) => reject(e.target.error);
     });
+  }
+
+  /**
+   * Retrieve vault metadata (creation date, salts, verifiers)
+   */
+  static async getVaultMeta() {
+    try {
+      const db = await this.getDB();
+      return new Promise((resolve) => {
+        const tx = db.transaction('vault_meta', 'readonly');
+        const req = tx.objectStore('vault_meta').get('meta');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Save biometric platform credential metadata & wrapped vault key
+   */
+  static async saveBiometricData(credentialId, wrappedPayload) {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('vault_meta', 'readwrite');
+      tx.objectStore('vault_meta').put({
+        id: 'biometric_auth',
+        credentialId: credentialId,
+        ciphertext: wrappedPayload.ciphertext,
+        iv: wrappedPayload.iv,
+        saltHex: wrappedPayload.saltHex,
+        enabled: true,
+        updatedAt: new Date().toISOString()
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  /**
+   * Retrieve biometric platform credential metadata
+   */
+  static async getBiometricData() {
+    try {
+      const db = await this.getDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('vault_meta', 'readonly');
+        const req = tx.objectStore('vault_meta').get('biometric_auth');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Remove biometric platform credential metadata
+   */
+  static async removeBiometricData() {
+    try {
+      const db = await this.getDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('vault_meta', 'readwrite');
+        const req = tx.objectStore('vault_meta').delete('biometric_auth');
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+      });
+    } catch {
+      return;
+    }
   }
 
   /**

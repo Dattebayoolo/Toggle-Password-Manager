@@ -64,7 +64,7 @@ export class CryptoEngine {
   /**
    * Derives an AES-GCM CryptoKey from a master password and salt using PBKDF2
    */
-  static async deriveKey(password, saltUint8, iterations = this.PBKDF2_ITERATIONS) {
+  static async deriveKey(password, saltUint8, iterations = this.PBKDF2_ITERATIONS, extractable = true) {
     const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
     const enc = new TextEncoder();
     const passwordKey = await cryptoObj.subtle.importKey(
@@ -84,9 +84,44 @@ export class CryptoEngine {
       },
       passwordKey,
       { name: 'AES-GCM', length: 256 },
-      false,
+      extractable,
       ['encrypt', 'decrypt']
     );
+  }
+
+  /**
+   * Exports an extractable CryptoKey to Base64 raw key bytes
+   */
+  static async exportKeyRaw(key) {
+    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
+    const raw = await cryptoObj.subtle.exportKey('raw', key);
+    return this.bufferToBase64(raw);
+  }
+
+  /**
+   * Imports a raw Base64 key into an AES-GCM CryptoKey
+   */
+  static async importKeyRaw(base64Raw, extractable = true) {
+    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
+    const buffer = this.base64ToBuffer(base64Raw);
+    return await cryptoObj.subtle.importKey(
+      'raw',
+      buffer,
+      { name: 'AES-GCM', length: 256 },
+      extractable,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  /**
+   * Generates a SHA-1 hash (uppercase hex) for k-Anonymity HaveIBeenPwned queries
+   */
+  static async hashSHA1(input) {
+    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
+    const enc = new TextEncoder();
+    const data = enc.encode(input);
+    const hash = await cryptoObj.subtle.digest('SHA-1', data);
+    return this.bufferToHex(hash).toUpperCase();
   }
 
   /**

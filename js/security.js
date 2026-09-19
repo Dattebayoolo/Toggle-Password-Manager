@@ -2,9 +2,11 @@
  * Toggle Password Manager - Security Checkup Engine
  * Direct local alternative to Google Password Manager's Checkup feature.
  * Detects weak passwords, reused passwords, compromised patterns, and calculates vault health.
+ * Includes k-Anonymity HaveIBeenPwned live breach scanning (zero-knowledge).
  */
 
 import { GeneratorEngine } from './generator.js';
+import { CryptoEngine } from './crypto.js';
 
 export class SecurityEngine {
   static COMMON_COMPROMISED_PATTERNS = [
@@ -31,12 +33,26 @@ export class SecurityEngine {
       const pwd = item.password || '';
       if (!pwd) return;
 
-      // 1. Weakness Check
+      // Check for known compromised patterns
+      const lowerPwd = pwd.toLowerCase();
+      let matchedPattern = null;
+      for (const pattern of this.COMMON_COMPROMISED_PATTERNS) {
+        if (lowerPwd.includes(pattern)) {
+          matchedPattern = pattern;
+          break;
+        }
+      }
+
+      // 1. Weakness Check: low score, short length (<10), or compromised dictionary word
       const strength = GeneratorEngine.evaluateStrength(pwd);
-      if (strength.score <= 1 || pwd.length < 10) {
+      if (strength.score <= 1 || pwd.length < 10 || matchedPattern) {
         weakItems.push({
           item,
-          reason: pwd.length < 8 ? 'Critically short (less than 8 characters)' : 'Weak entropy - easily crackable',
+          reason: matchedPattern
+            ? `Contains common compromised pattern "${matchedPattern}"`
+            : pwd.length < 8
+              ? 'Critically short (less than 8 characters)'
+              : 'Weak entropy - easily crackable',
           strength
         });
       }
@@ -48,15 +64,11 @@ export class SecurityEngine {
       reusedMap.get(pwd).push(item);
 
       // 3. Known Compromised Patterns
-      const lowerPwd = pwd.toLowerCase();
-      for (const pattern of this.COMMON_COMPROMISED_PATTERNS) {
-        if (lowerPwd.includes(pattern)) {
-          compromisedItems.push({
-            item,
-            reason: `Contains common compromised keyword "${pattern}"`
-          });
-          break;
-        }
+      if (matchedPattern) {
+        compromisedItems.push({
+          item,
+          reason: `Contains common compromised keyword "${matchedPattern}"`
+        });
       }
 
       // 4. Stale / Old Passwords
@@ -135,5 +147,90 @@ export class SecurityEngine {
       compromisedItems,
       oldItems
     };
+  }
+
+  /**
+   * Privacy-Preserving k-Anonymity Breach Check via HaveIBeenPwned Pwned Passwords API.
+   * 
+   * Algorithm:
+   *  1. SHA-1 hash the password locally (never stored or sent)
+   *  2. Send ONLY the first 5 hex characters (the "prefix") to HIBP
+   *  3. HIBP returns a list of all hash suffixes (35 chars) for that prefix
+   *  4. Match the remaining 35 chars of our hash 100% in browser memory
+   * 
+   * @param {string} password - plaintext password to check
+   * @returns {Promise<number>} - breach exposure count (0 = not found)
+   */
+  static async checkPwnedPassword(password) {
+    try {
+      const sha1Hex = await CryptoEngine.hashSHA1(password);
+      const prefix = sha1Hex.slice(0, 5);
+      const suffix = sha1Hex.slice(5);
+
+      const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+        method: 'GET',
+        headers: { 'Add-Padding': 'true' }  // HIBP privacy padding
+      });
+
+      if (!response.ok) {
+        throw new Error(`HIBP API error: ${response.status}`);
+      }
+
+      const text = await response.text();
+      const lines = text.split('\r\n');
+
+      for (const line of lines) {
+        const [hashSuffix, countStr] = line.split(':');
+        if (hashSuffix && hashSuffix.toUpperCase() === suffix) {
+          return parseInt(countStr, 10) || 0;
+        }
+      }
+
+      return 0; // Not found in breached database
+    } catch (err) {
+      // Network failure or API unavailable — return -1 to signal "couldn't check"
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        return -1; // Offline / network error
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Batch live breach scanner — asynchronously evaluates all login passwords
+   * against HaveIBeenPwned using k-Anonymity, with real-time progress callbacks.
+   * 
+   * @param {Array} items - vault items (filters to logins with passwords)
+   * @param {Function} onProgress - callback({current, total, item, breachCount})
+   * @returns {Promise<Array>} - array of {item, breachCount} for items found in breaches
+   */
+  static async runLiveBreachScan(items = [], onProgress = () => {}) {
+    const logins = items.filter(i => (i.category === 'login' || !i.category) && i.password && !i.trash);
+    const breachedItems = [];
+    const THROTTLE_MS = 150; // Respect HIBP rate limit (max ~10 req/sec)
+
+    for (let i = 0; i < logins.length; i++) {
+      const item = logins[i];
+
+      // Throttle requests to avoid HIBP rate limiting
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, THROTTLE_MS));
+      }
+
+      const breachCount = await this.checkPwnedPassword(item.password);
+
+      onProgress({
+        current: i + 1,
+        total: logins.length,
+        item,
+        breachCount
+      });
+
+      if (breachCount > 0) {
+        breachedItems.push({ item, breachCount });
+      }
+    }
+
+    return breachedItems;
   }
 }
