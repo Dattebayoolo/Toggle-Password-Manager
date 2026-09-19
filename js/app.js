@@ -7,6 +7,7 @@ import { StorageEngine } from './storage.js';
 import { GeneratorEngine } from './generator.js';
 import { SecurityEngine } from './security.js';
 import { ImportExportEngine } from './importer.js';
+import { TOTPEngine } from './totp.js';
 import { UI } from './ui.js';
 
 class ToggleApp {
@@ -27,6 +28,9 @@ class ToggleApp {
 
     this.inactivitySecondsRemaining = 300;
     this.inactivityIntervalId = null;
+
+    this.totpIntervalId = null;
+    this.currentDrawerTotpCode = '';
   }
 
   async init() {
@@ -35,6 +39,7 @@ class ToggleApp {
     this.bindGeneratorEvents();
     this.bindDrawerEvents();
     this.bindSettingsEvents();
+    this.startTOTPTicker();
 
     this.prefs = await StorageEngine.getPreferences();
     const cachedTheme = localStorage.getItem('toggle_theme');
@@ -74,7 +79,7 @@ class ToggleApp {
     document.getElementById('setup-view').style.display = 'none';
     document.getElementById('unlock-view').style.display = 'block';
     document.getElementById('recovery-view').style.display = 'none';
-    
+
     const unlockInput = document.getElementById('unlock-password');
     if (unlockInput) {
       unlockInput.value = '';
@@ -440,14 +445,32 @@ class ToggleApp {
         `;
       } else if (item.password) {
         const displayPassword = isRevealed ? UI.escapeHTML(item.password) : '••••••••••••';
+        let totpChipHTML = '';
+        if (item.totp) {
+          totpChipHTML = `
+            <div class="totp-card-chip" data-action="copy-totp" data-id="${item.id}" data-totp="${UI.escapeHTML(item.totp)}" title="Click to copy 2FA code">
+              <span class="totp-card-code" id="totp-code-${item.id}">------</span>
+              <div class="totp-card-mini-circle">
+                <svg viewBox="0 0 36 36">
+                  <circle class="totp-circle-bg" cx="18" cy="18" r="15.915" />
+                  <circle class="totp-circle-bar" id="totp-ring-${item.id}" cx="18" cy="18" r="15.915" />
+                </svg>
+              </div>
+            </div>
+          `;
+        }
+
         centerContent = `
-          <div class="vault-password-preview font-mono" id="pwd-preview-${item.id}">
-            ${displayPassword}
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="vault-password-preview font-mono" id="pwd-preview-${item.id}">
+              ${displayPassword}
+            </div>
+            <label class="toggle-switch mini" title="Toggle Show/Hide Password">
+              <input type="checkbox" class="password-reveal-toggle" data-id="${item.id}" ${isRevealed ? 'checked' : ''} />
+              <span class="toggle-slider"></span>
+            </label>
+            ${totpChipHTML}
           </div>
-          <label class="toggle-switch mini" title="Toggle Show/Hide Password">
-            <input type="checkbox" class="password-reveal-toggle" data-id="${item.id}" ${isRevealed ? 'checked' : ''} />
-            <span class="toggle-slider"></span>
-          </label>
         `;
       }
 
@@ -528,6 +551,15 @@ class ToggleApp {
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            `;
+          }
+          if (item.totp) {
+            actionButtons += `
+              <button class="btn-icon" data-action="copy-totp" data-id="${item.id}" title="Copy 2FA Code" style="color:var(--primary);">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
               </button>
             `;
@@ -629,9 +661,25 @@ class ToggleApp {
       if (!item) return;
 
       card.addEventListener('click', (e) => {
+        const totpChip = e.target.closest('.totp-card-chip');
+        if (totpChip && item.totp) {
+          TOTPEngine.generateTOTP(item.totp).then(code => {
+            UI.copySecure(code, '2FA Authentication Code');
+          });
+          return;
+        }
+
         const actionBtn = e.target.closest('button');
         if (actionBtn) {
           const action = actionBtn.dataset.action;
+          if (action === 'copy-totp') {
+            if (item.totp) {
+              TOTPEngine.generateTOTP(item.totp).then(code => {
+                UI.copySecure(code, '2FA Authentication Code');
+              });
+            }
+            return;
+          }
           if (action === 'copy-user') {
             UI.copySecure(item.username, 'Username');
             return;
@@ -837,6 +885,8 @@ class ToggleApp {
     document.getElementById('edit-item-url').value = this.activeItem.url || '';
     document.getElementById('edit-item-user').value = this.activeItem.username || '';
     document.getElementById('edit-item-password').value = this.activeItem.password || '';
+    const totpInput = document.getElementById('edit-item-totp');
+    if (totpInput) totpInput.value = this.activeItem.totp || '';
 
     // Passkey fields
     document.getElementById('edit-passkey-rp').value = this.activeItem.passkeyRp || this.activeItem.url || '';
@@ -876,6 +926,9 @@ class ToggleApp {
 
     // Password strength bar update
     this.updateDrawerPasswordStrength(this.activeItem.password || '');
+
+    // TOTP real-time preview update
+    this.updateDrawerTOTP();
 
     // QR Code generation
     const qrContainer = document.getElementById('drawer-qr-container');
@@ -1035,6 +1088,7 @@ class ToggleApp {
       const url = document.getElementById('edit-item-url').value.trim();
       const username = document.getElementById('edit-item-user').value.trim();
       const newPassword = document.getElementById('edit-item-password').value;
+      const totp = document.getElementById('edit-item-totp')?.value.trim();
 
       if (!name && !url) {
         UI.showToast('Please provide an account name or website URL', 'danger');
@@ -1057,6 +1111,7 @@ class ToggleApp {
         url,
         username,
         password: newPassword,
+        totp: totp || undefined,
         history: this.activeItem.history || []
       };
     }
@@ -1794,7 +1849,7 @@ class ToggleApp {
 
     document.getElementById('setup-form')?.addEventListener('submit', (e) => this.handleSetupSubmit(e));
     document.getElementById('unlock-form')?.addEventListener('submit', (e) => this.handleUnlockSubmit(e));
-    
+
     // Unlock peek password toggle
     document.getElementById('unlock-reveal-btn')?.addEventListener('click', () => {
       const input = document.getElementById('unlock-password');
@@ -1884,6 +1939,33 @@ class ToggleApp {
     document.getElementById('drawer-pwd-generate-btn')?.addEventListener('click', () => {
       UI.openModal('generator-modal');
       document.getElementById('gen-refresh-btn')?.click();
+    });
+
+    // Drawer TOTP secret input listener
+    const drawerTotpInput = document.getElementById('edit-item-totp');
+    drawerTotpInput?.addEventListener('input', () => {
+      this.updateDrawerTOTP();
+    });
+
+    // Drawer TOTP paste button
+    document.getElementById('drawer-totp-paste-btn')?.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (drawerTotpInput && text) {
+          drawerTotpInput.value = text.trim();
+          this.updateDrawerTOTP();
+          UI.showToast('Pasted 2FA secret from clipboard', 'info');
+        }
+      } catch (err) {
+        UI.showToast('Unable to read clipboard', 'warning');
+      }
+    });
+
+    // Drawer copy TOTP code button
+    document.getElementById('drawer-totp-copy-btn')?.addEventListener('click', () => {
+      if (this.currentDrawerTotpCode) {
+        UI.copySecure(this.currentDrawerTotpCode, '2FA Authentication Code');
+      }
     });
   }
 
@@ -2261,7 +2343,7 @@ class ToggleApp {
 
     const words = phrase ? phrase.trim().split(/\s+/) : [];
 
-    const htmlContent = \`<!DOCTYPE html>
+    const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2382,12 +2464,12 @@ class ToggleApp {
     </p>
 
     <div class="grid">
-      \${words.map((w, i) => \`
+      ${words.map((w, i) => `
         <div class="cell">
-          <span class="num">\${i + 1}.</span>
-          <span class="val">\${UI.escapeHTML(w)}</span>
+          <span class="num">${i + 1}.</span>
+          <span class="val">${UI.escapeHTML(w)}</span>
         </div>
-      \`).join('')}
+      `).join('')}
     </div>
 
     <div class="notice">
@@ -2400,15 +2482,16 @@ class ToggleApp {
     </div>
 
     <div class="meta">
-      Vault Created: \${createdDate} &bull; Encryption: AES-256-GCM (PBKDF2-SHA256, 600,000 rounds) &bull; Local-First Zero-Knowledge
+      Vault Created: ${createdDate} &bull; Encryption: AES-256-GCM (PBKDF2-SHA256, 600,000 rounds) &bull; Local-First Zero-Knowledge
     </div>
   </div>
 </body>
-</html>\`;
+</html>`;
 
     ImportExportEngine.triggerDownload(
       htmlContent,
-      \`Toggle_Emergency_Recovery_Kit_\${new Date().toISOString().slice(0, 10)}.html\`,
+      `Toggle_Emergency_Recovery_Kit_${new Date().toISOString().slice(0, 10)}.html`,
+
       'text/html'
     );
     UI.showToast('Downloaded Emergency Recovery Kit HTML', 'success');

@@ -52,9 +52,29 @@ const server = http.createServer((req, res) => {
     return res.end('Forbidden');
   }
 
+  // Direct Favicon handler to avoid browser 404s/errors
+  if (safeUrl === '/favicon.ico') {
+    const faviconPath = path.join(PUBLIC_DIR, 'favicon.ico');
+    if (fs.existsSync(faviconPath)) {
+      const data = fs.readFileSync(faviconPath);
+      res.writeHead(200, { 'Content-Type': 'image/x-icon' });
+      return res.end(data);
+    }
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2310b981"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`;
+    res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
+    return res.end(svgIcon);
+  }
+
   fs.stat(filePath, (err, stats) => {
     if (err) {
-      // If file not found, fallback to index.html for SPA routing
+      // If the request has an extension (e.g. .css, .js, .png, .ico), return 404 rather than HTML
+      const reqExt = path.extname(safeUrl);
+      if (reqExt && reqExt !== '.html') {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end(`404 Not Found: ${safeUrl}`);
+      }
+
+      // Otherwise fallback to index.html for SPA routing
       const indexPath = path.join(PUBLIC_DIR, 'index.html');
       fs.readFile(indexPath, (indexErr, content) => {
         if (indexErr) {

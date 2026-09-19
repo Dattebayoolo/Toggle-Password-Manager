@@ -16,7 +16,8 @@
   </script>
 
   <link rel="manifest" href="./manifest.json?v=4.0">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'><path d='M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z'/></svg>">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="alternate icon" href="./favicon.ico">
   
   <!-- CSS Stylesheets with Cache Busting -->
   <link rel="stylesheet" href="./styles/theme.css?v=4.0">
@@ -1031,6 +1032,49 @@
               <div class="strength-label-container">
                 <span id="drawer-strength-label" class="strength-text">Strength</span>
                 <span id="drawer-crack-time" class="crack-time-estimate">Crack estimate</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two-Factor Authentication (TOTP / 2FA) -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>Two-Factor Authentication (TOTP)</span>
+              <span class="badge badge-safe" style="font-size:0.7rem;padding:2px 6px;">RFC 6238</span>
+            </div>
+            <div class="input-container">
+              <input type="text" id="edit-item-totp" class="input-field font-mono" placeholder="Secret key (e.g. JBSWY3DPEHPK3PXP) or otpauth:// URL" />
+              <div class="input-actions-group">
+                <button type="button" class="btn-icon" id="drawer-totp-paste-btn" title="Paste from clipboard">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Real-time Live TOTP Code Widget -->
+            <div id="drawer-totp-preview" class="totp-drawer-widget" style="display:none;">
+              <div class="totp-drawer-info">
+                <span class="totp-drawer-label">Current 2FA Code</span>
+                <div class="totp-code-display-group">
+                  <span id="drawer-totp-code" class="totp-drawer-code font-mono">------</span>
+                  <button type="button" class="btn-icon btn-copy-totp" id="drawer-totp-copy-btn" title="Copy 2FA code">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="totp-drawer-timer">
+                <div class="totp-countdown-circle">
+                  <svg viewBox="0 0 36 36">
+                    <circle class="totp-circle-bg" cx="18" cy="18" r="15.915" />
+                    <circle class="totp-circle-bar" id="drawer-totp-ring" cx="18" cy="18" r="15.915" />
+                  </svg>
+                  <span id="drawer-totp-sec" class="totp-seconds-label">30</span>
+                </div>
               </div>
             </div>
           </div>
