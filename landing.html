@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Toggle is a zero-knowledge, local-first password manager with AES-256-GCM encryption. Your passwords never leave your device." />
+  <meta name="theme-color" content="#11141a" />
+  <title>Toggle — The Privacy-First Password Manager</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* =====================================================
+       RESET & BASE
+       ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --emerald:       #10b981;
+      --emerald-light: #34d399;
+      --emerald-dark:  #059669;
+      --emerald-dim:   rgba(16, 185, 129, 0.12);
+      --emerald-glow:  rgba(16, 185, 129, 0.25);
+      --bg-page:       #080b11;
+      --bg-card:       #111520;
+      --bg-card2:      #161c27;
+      --bg-glass:      rgba(17, 21, 32, 0.72);
+      --border:        rgba(255,255,255,0.07);
+      --border-em:     rgba(16, 185, 129, 0.22);
+      --text-1:        #f3f4f6;
+      --text-2:        #9ca3af;
+      --text-3:        #6b7280;
+      --red:           #f87171;
+      --amber:         #fbbf24;
+      --violet:        #a78bfa;
+      --cyan:          #22d3ee;
+      --font:          'Plus Jakarta Sans', system-ui, sans-serif;
+      --mono:          'JetBrains Mono', monospace;
+      --ease:          cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-page);
+      color: var(--text-1);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--emerald); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* =====================================================
+       NAV
+       ===================================================== */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 max(5vw, 24px);
+      height: 64px;
+      background: rgba(8, 11, 17, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s var(--ease);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text-1);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-logo svg { flex-shrink: 0; }
+
+    .nav-wordmark span { color: var(--emerald); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-links a {
+      color: var(--text-2);
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 20px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-1);
+      background: rgba(255,255,255,0.06);
+      text-decoration: none;
+    }
+
+    .btn-nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 20px;
+      background: var(--emerald);
+      color: #022c22 !important;
+      font-weight: 700 !important;
+      font-size: 0.875rem;
+      border-radius: 20px;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s !important;
+    }
+
+    .btn-nav-cta:hover {
+      background: var(--emerald-light) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(16,185,129,0.35);
+      text-decoration: none !important;
+    }
+
+    /* =====================================================
+       HERO
+       ===================================================== */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px max(5vw, 24px) 80px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    /* Radial glow background */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(16,185,129,0.14) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Grid pattern overlay */
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(16,185,129,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16,185,129,0.04) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      border: 1px solid var(--border-em);
+      border-radius: 20px;
+      background: var(--emerald-dim);
+      color: var(--emerald-light);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      animation: fadeUp 0.5s var(--ease) both;
+    }
+
+    .hero-eyebrow-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    h1.hero-title {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      font-weight: 900;
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+      max-width: 820px;
+      margin: 0 auto 24px;
+      animation: fadeUp 0.55s 0.08s var(--ease) both;
+    }
+
+    .hero-title .em {
+      background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-light) 50%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-2);
+      max-width: 560px;
+      margin: 0 auto 44px;
+      line-height: 1.7;
+      animation: fadeUp 0.55s 0.15s var(--ease) both;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      animation: fadeUp 0.55s 0.22s var(--ease) both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      background: var(--emerald);
+      color: #022c22;
+      font-weight: 800;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-primary:hover {
+      background: var(--emerald-light);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(16,185,129,0.4);
+      text-decoration: none;
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: transparent;
+      color: var(--text-1);
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.12s;
+      text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.15);
+      transform: translateY(-2px);
+      text-decoration: none;
+    }
+
+    .hero-note {
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: var(--text-3);
+      animation: fadeUp 0.55s 0.3s var(--ease) both;
+    }
+
+    /* Mock app window */
+    .hero-mockup {
+      position: relative;
+      width: min(880px, 95vw);
+      margin: 60px auto 0;
+      animation: fadeUp 0.7s 0.4s var(--ease) both;
+    }
+
+    .mockup-chrome {
+      background: #0d1117;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(16,185,129,0.12),
+        0 40px 80px rgba(0,0,0,0.8),
+        0 0 120px rgba(16,185,129,0.07);
+    }
+
+    .mockup-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #0d1117;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .mockup-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+
+    .mockup-dot.red   { background: #ff5f56; }
+    .mockup-dot.amber { background: #ffbd2e; }
+    .mockup-dot.green { background: var(--emerald); }
+
+    .mockup-urlbar {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      color: var(--text-3);
+      font-family: var(--mono);
+      text-align: center;
+    }
+
+    .mockup-body {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 380px;
+    }
+
+    .mockup-sidebar {
+      background: #111520;
+      border-right: 1px solid rgba(255,255,255,0.05);
+      padding: 20px 12px;
+    }
+
+    .mockup-sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px 16px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 14px;
+    }
+
+    .mockup-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: var(--text-3);
+      margin-bottom: 2px;
+      cursor: default;
+    }
+
+    .mockup-nav-item.active {
+      background: var(--emerald-dim);
+      color: var(--emerald-light);
+    }
+
+    .mockup-nav-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.6;
+    }
+
+    .mockup-main {
+      padding: 20px;
+      background: #0d1117;
+    }
+
+    .mockup-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 8px 14px;
+      margin-bottom: 18px;
+      font-size: 0.78rem;
+      color: var(--text-3);
+    }
+
+    .mockup-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      transition: background 0.15s;
+    }
+
+    .mockup-card:first-of-type {
+      border-color: var(--border-em);
+      background: var(--emerald-dim);
+    }
+
+    .mockup-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      background: rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .mockup-card-info { flex: 1; min-width: 0; }
+
+    .mockup-card-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 2px;
+    }
+
+    .mockup-card-user {
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+
+    .mockup-card-pwd {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-3);
+      letter-spacing: 0.05em;
+    }
+
+    .totp-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--emerald-dim);
+      border: 1px solid var(--border-em);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--emerald-light);
+    }
+
+    .totp-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    /* =====================================================
+       TRUST BAR
+       ===================================================== */
+    .trust-bar {
+      padding: 24px max(5vw, 24px);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(24px, 5vw, 64px);
+      flex-wrap: wrap;
+      background: rgba(255,255,255,0.015);
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .trust-icon {
+      color: var(--emerald);
+    }
+
+    /* =====================================================
+       SECTIONS COMMON
+       ===================================================== */
+    section {
+      padding: 100px max(5vw, 24px);
+    }
+
+    .section-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--emerald);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      margin-bottom: 18px;
+    }
+
+    .section-sub {
+      font-size: 1rem;
+      color: var(--text-2);
+      line-height: 1.7;
+      max-width: 540px;
+    }
+
+    /* =====================================================
+       FEATURES — ALTERNATING BENTO
+       ===================================================== */
+    .features { background: var(--bg-page); }
+
+    .features-grid {
+      display: grid;
+      gap: 24px;
+      margin-top: 60px;
+    }
+
+    .feature-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 720px) {
+      .feature-row { grid-template-columns: 1fr; }
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-em);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+
+    .feature-card.wide {
+      grid-column: span 2;
+    }
+
+    @media (max-width: 720px) {
+      .feature-card.wide { grid-column: span 1; }
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-em), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 22px;
+      font-size: 1.4rem;
+    }
+
+    .feature-icon.em  { background: var(--emerald-dim); color: var(--emerald); }
+    .feature-icon.vi  { background: rgba(167,139,250,0.1); color: var(--violet); }
+    .feature-icon.cy  { background: rgba(34,211,238,0.1); color: var(--cyan); }
+    .feature-icon.am  { background: rgba(251,191,36,0.1); color: var(--amber); }
+    .feature-icon.rd  { background: rgba(248,113,113,0.1); color: var(--red); }
+
+    .feature-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      font-size: 0.9rem;
+      color: var(--text-2);
+      line-height: 1.65;
+    }
+
+    /* inline code inside feature desc */
+    .feature-desc code {
+      font-family: var(--mono);
+      font-size: 0.82em;
+      background: rgba(255,255,255,0.07);
+      color: var(--emerald-light);
+      padding: 1px 6px;
+      border-radius: 5px;
+    }
+
+    /* Security score widget inside wide card */
+    .security-widget {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .sec-stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sec-stat-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .sec-stat-label { font-size: 0.78rem; color: var(--text-3); margin-bottom: 2px; }
+    .sec-stat-value { font-size: 0.92rem; font-weight: 700; }
+
+    /* =====================================================
+       HOW IT WORKS — STEPS
+       ===================================================== */
+    .how { background: var(--bg-card2); }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+      margin-top: 60px;
+    }
+
+    .step {
+      position: relative;
+    }
+
+    .step-num {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--border-em);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--emerald);
+      background: var(--emerald-dim);
+      margin-bottom: 20px;
+      font-family: var(--mono);
+    }
+
+    .step-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 0.875rem;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    /* =====================================================
+       SECURITY SECTION
+       ===================================================== */
+    .security { background: var(--bg-page); }
+
+    .security-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .security-inner { grid-template-columns: 1fr; gap: 40px; }
+    }
+
+    .security-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .security-table tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .security-table tr:last-child { border-bottom: none; }
+    .security-table tr:hover { background: rgba(16,185,129,0.04); }
+
+    .security-table td {
+      padding: 13px 18px;
+      font-size: 0.85rem;
+    }
+
+    .security-table td:first-child {
+      color: var(--text-3);
+      width: 45%;
+      font-weight: 500;
+    }
+
+    .security-table td:last-child {
+      color: var(--emerald-light);
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+
+    /* =====================================================
+       TOTP SECTION
+       ===================================================== */
+    .totp-section { background: var(--bg-card2); }
+
+    .totp-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .totp-inner { grid-template-columns: 1fr; gap: 40px; }
+    }
+
+    .totp-demo {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .totp-demo-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 20px;
+    }
+
+    .totp-account-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      background: var(--emerald-dim);
+      border: 1px solid var(--border-em);
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    .totp-logo {
+      width: 38px; height: 38px;
+      border-radius: 9px;
+      background: rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .totp-account-info { flex: 1; min-width: 0; }
+
+    .totp-service {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-1);
+      margin-bottom: 2px;
+    }
+
+    .totp-user {
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+
+    .totp-live {
+      text-align: right;
+    }
+
+    .totp-code {
+      font-family: var(--mono);
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--emerald);
+      letter-spacing: 0.1em;
+    }
+
+    .totp-timer {
+      font-size: 0.68rem;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    .totp-account-row-muted {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    /* =====================================================
+       COMPARISON TABLE
+       ===================================================== */
+    .compare { background: var(--bg-page); }
+
+    .compare-table-wrap {
+      margin-top: 60px;
+      overflow-x: auto;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .compare-table th {
+      padding: 18px 24px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .compare-table th.highlight {
+      color: var(--emerald);
+      background: rgba(16,185,129,0.05);
+    }
+
+    .compare-table td {
+      padding: 14px 24px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-2);
+    }
+
+    .compare-table tr:last-child td { border-bottom: none; }
+
+    .compare-table td.highlight {
+      background: rgba(16,185,129,0.04);
+      color: var(--text-1);
+      font-weight: 500;
+    }
+
+    .check { color: var(--emerald); font-size: 1rem; }
+    .cross { color: var(--text-3); font-size: 1rem; }
+    .partial { color: var(--amber); font-size: 1rem; }
+
+    /* =====================================================
+       CTA
+       ===================================================== */
+    .cta {
+      padding: 120px max(5vw, 24px);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 100%, rgba(16,185,129,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-title {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.08;
+      margin-bottom: 22px;
+    }
+
+    .cta-sub {
+      font-size: 1.05rem;
+      color: var(--text-2);
+      margin-bottom: 44px;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+
+    /* =====================================================
+       FOOTER
+       ===================================================== */
+    footer {
+      padding: 40px max(5vw, 24px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--text-1);
+    }
+
+    .footer-logo span { color: var(--emerald); }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      font-size: 0.82rem;
+      color: var(--text-3);
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover {
+      color: var(--emerald);
+      text-decoration: none;
+    }
+
+    .footer-copy {
+      font-size: 0.78rem;
+      color: var(--text-3);
+    }
+
+    /* =====================================================
+       ANIMATIONS
+       ===================================================== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+
+    .float { animation: float 4s ease-in-out infinite; }
+
+    /* scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.55s var(--ease), transform 0.55s var(--ease);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+    @media (max-width: 600px) {
+      .nav-links .hide-sm { display: none; }
+      .feature-row { grid-template-columns: 1fr; }
+      .feature-card.wide { grid-column: span 1; }
+    }
+
+    /* Blinking cursor in code demo */
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--emerald);
+      vertical-align: middle;
+      margin-left: 2px;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Progress bar for TOTP */
+    .progress-ring {
+      transition: stroke-dashoffset 1s linear;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="nav-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path fill="#10b981" d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm0 4a3 3 0 013 3c0 1.3-.84 2.4-2 2.82V15a1 1 0 11-2 0v-3.18A3.001 3.001 0 0112 6z"/>
+      </svg>
+      <span class="nav-wordmark">Toggle<span>.</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="hide-sm">Features</a>
+      <a href="#security" class="hide-sm">Security</a>
+      <a href="#compare" class="hide-sm">Compare</a>
+      <a href="/app" class="btn-nav-cta">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        Open Vault
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid"></div>
+
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-dot"></div>
+      Zero-Knowledge · Local-First · Open Source
+    </div>
+
+    <h1 class="hero-title">
+      Your passwords,<br/>
+      <span class="em">never leaving your device.</span>
+    </h1>
+
+    <p class="hero-sub">
+      Toggle is a privacy-first password manager with military-grade AES-256-GCM encryption.
+      No cloud. No servers. No telemetry. Just you and your vault.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/app" class="btn-primary">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        Open Vault — Free
+      </a>
+      <a href="https://github.com/your-username/toggle-password-manager" class="btn-secondary" target="_blank">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.57v-2c-3.34.72-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.3 3.49 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 016 0c2.28-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.68.82.57C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View Source
+      </a>
+    </div>
+
+    <p class="hero-note">✓ No account required &nbsp;·&nbsp; ✓ No installation &nbsp;·&nbsp; ✓ Runs entirely in your browser</p>
+
+    <!-- App mockup -->
+    <div class="hero-mockup float">
+      <div class="mockup-chrome">
+        <div class="mockup-titlebar">
+          <div class="mockup-dot red"></div>
+          <div class="mockup-dot amber"></div>
+          <div class="mockup-dot green"></div>
+          <div class="mockup-urlbar">🔒 127.0.0.1:4242 — Toggle Password Manager</div>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-sidebar">
+            <div class="mockup-sidebar-logo">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path fill="#10b981" d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm0 4a3 3 0 013 3c0 1.3-.84 2.4-2 2.82V15a1 1 0 11-2 0v-3.18A3.001 3.001 0 0112 6z"/></svg>
+              Toggle
+            </div>
+            <div class="mockup-nav-item active">
+              <div class="mockup-nav-dot"></div> All Passwords
+            </div>
+            <div class="mockup-nav-item">
+              <div class="mockup-nav-dot"></div> Favourites
+            </div>
+            <div class="mockup-nav-item">
+              <div class="mockup-nav-dot"></div> Credit Cards
+            </div>
+            <div class="mockup-nav-item">
+              <div class="mockup-nav-dot"></div> Passkeys
+            </div>
+            <div class="mockup-nav-item">
+              <div class="mockup-nav-dot"></div> Secure Notes
+            </div>
+            <div class="mockup-nav-item">
+              <div class="mockup-nav-dot"></div> Security Check
+            </div>
+          </div>
+          <div class="mockup-main">
+            <div class="mockup-search">
+              <svg width="13" height="13" fill="none" stroke="#6b7280" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Search passwords...
+            </div>
+            <div class="mockup-card">
+              <div class="mockup-icon">🐙</div>
+              <div class="mockup-card-info">
+                <div class="mockup-card-name">GitHub</div>
+                <div class="mockup-card-user">kazam@gmail.com</div>
+              </div>
+              <div class="mockup-card-pwd">••••••••••••</div>
+              <div class="totp-chip"><div class="totp-dot"></div> 483 912</div>
+            </div>
+            <div class="mockup-card">
+              <div class="mockup-icon">🟦</div>
+              <div class="mockup-card-info">
+                <div class="mockup-card-name">Microsoft 365</div>
+                <div class="mockup-card-user">kazam@outlook.com</div>
+              </div>
+              <div class="mockup-card-pwd">••••••••••••</div>
+            </div>
+            <div class="mockup-card">
+              <div class="mockup-icon">🛒</div>
+              <div class="mockup-card-info">
+                <div class="mockup-card-name">Amazon</div>
+                <div class="mockup-card-user">kazam@gmail.com</div>
+              </div>
+              <div class="mockup-card-pwd">••••••••••••</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST BAR -->
+  <div class="trust-bar">
+    <div class="trust-item">
+      <svg class="trust-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      AES-256-GCM Encrypted
+    </div>
+    <div class="trust-item">
+      <svg class="trust-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+      No Cloud Storage
+    </div>
+    <div class="trust-item">
+      <svg class="trust-icon" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.57v-2c-3.34.72-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.3 3.49 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 016 0c2.28-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.68.82.57C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      100% Open Source
+    </div>
+    <div class="trust-item">
+      <svg class="trust-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
+      PBKDF2 · 600K Rounds
+    </div>
+    <div class="trust-item">
+      <svg class="trust-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+      48 Automated Tests
+    </div>
+    <div class="trust-item">
+      <svg class="trust-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      PWA Installable
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="reveal">
+      <div class="section-eyebrow">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+        Everything you need
+      </div>
+      <h2 class="section-title">Built for the paranoid.<br/>Designed for everyone.</h2>
+      <p class="section-sub">Toggle packs every feature of a premium password manager into a single open-source file. No subscription. No upsell.</p>
+    </div>
+
+    <div class="features-grid reveal">
+      <div class="feature-row">
+        <div class="feature-card">
+          <div class="feature-icon em">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <div class="feature-title">AES-256-GCM Encryption</div>
+          <div class="feature-desc">Every item in your vault is encrypted with <code>AES-256-GCM</code> — the same standard used by banks and governments. The key is derived with PBKDF2-SHA256 at 600,000 iterations, making brute-force attacks computationally infeasible.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon vi">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+          </div>
+          <div class="feature-title">Biometric Unlock</div>
+          <div class="feature-desc">Authenticate with Windows Hello, Touch ID, or Face ID using the <code>WebAuthn</code> API. Your vault key is wrapped with your device's platform authenticator — no master password typing required on subsequent unlocks.</div>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-card wide">
+          <div class="feature-icon am">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div class="feature-title">Google-style Security Checkup</div>
+          <div class="feature-desc">A full security audit of your entire vault — detects weak passwords, reused credentials, and compromised entries via HIBP k-Anonymity (only the first 5 chars of a SHA-1 hash leave your device). Get a real-time health score with grade.</div>
+          <div class="security-widget">
+            <div class="sec-stat">
+              <div class="sec-stat-icon" style="background:rgba(248,113,113,0.1);">⚠️</div>
+              <div>
+                <div class="sec-stat-label">Compromised</div>
+                <div class="sec-stat-value" style="color:var(--red);">0 found</div>
+              </div>
+            </div>
+            <div class="sec-stat">
+              <div class="sec-stat-icon" style="background:rgba(251,191,36,0.1);">🔄</div>
+              <div>
+                <div class="sec-stat-label">Reused passwords</div>
+                <div class="sec-stat-value" style="color:var(--amber);">2 groups</div>
+              </div>
+            </div>
+            <div class="sec-stat">
+              <div class="sec-stat-icon" style="background:rgba(248,113,113,0.1);">💀</div>
+              <div>
+                <div class="sec-stat-label">Weak passwords</div>
+                <div class="sec-stat-value" style="color:var(--red);">3 items</div>
+              </div>
+            </div>
+            <div class="sec-stat">
+              <div class="sec-stat-icon" style="background:rgba(16,185,129,0.1);">🛡️</div>
+              <div>
+                <div class="sec-stat-label">Health score</div>
+                <div class="sec-stat-value" style="color:var(--emerald);">82% — B</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-card">
+          <div class="feature-icon cy">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+          </div>
+          <div class="feature-title">7 Vault Categories</div>
+          <div class="feature-desc">Store more than just passwords. Toggle supports Logins, Passkeys, Credit Cards, Addresses, API Keys, Secure Notes, and a Trash with soft-delete restore — all in a unified, encrypted vault.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon rd">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          </div>
+          <div class="feature-title">Google CSV Import</div>
+          <div class="feature-desc">Migrate from Google Password Manager in seconds. Export your passwords from Chrome → Settings → Passwords, then drag-and-drop the <code>.csv</code> into Toggle. Full round-trip export back to Google format supported.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="reveal">
+        <div class="section-eyebrow">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+          Dead simple
+        </div>
+        <h2 class="section-title">Up and running in 60 seconds.</h2>
+        <p class="section-sub">No sign-up. No email verification. Just clone, run, and create your vault.</p>
+      </div>
+      <div class="steps reveal">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-title">Clone & start</div>
+          <div class="step-desc">Run <code style="font-family:var(--mono);font-size:0.82em;background:rgba(255,255,255,0.07);color:var(--emerald-light);padding:1px 6px;border-radius:5px;">npm run dev</code> in your terminal. The local server starts at <code style="font-family:var(--mono);font-size:0.82em;background:rgba(255,255,255,0.07);color:var(--emerald-light);padding:1px 6px;border-radius:5px;">127.0.0.1:4242</code>.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-title">Create your vault</div>
+          <div class="step-desc">Choose a strong master password. Toggle derives a 256-bit AES key with 600,000 PBKDF2 rounds and saves an encrypted blob in IndexedDB — locally.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-title">Add your passwords</div>
+          <div class="step-desc">Import from Google CSV in one click, or manually add logins, cards, passkeys, and notes. Every item is encrypted the moment you save.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-title">Stay secure</div>
+          <div class="step-desc">Run the Security Checkup, enable biometric unlock, enable TOTP 2FA on accounts, and download your Emergency Recovery Kit as backup.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOTP SECTION -->
+  <section class="totp-section">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="totp-inner">
+        <div class="reveal">
+          <div class="section-eyebrow">
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+            Built-in authenticator
+          </div>
+          <h2 class="section-title">2FA codes,<br/>right in your vault.</h2>
+          <p class="section-sub">Toggle's built-in TOTP engine (RFC 6238) generates live 6-digit codes with a real-time countdown. No separate authenticator app needed. Just paste your secret key or <code style="font-family:var(--mono);font-size:0.82em;background:rgba(255,255,255,0.1);color:var(--emerald-light);padding:1px 6px;border-radius:5px;">otpauth://</code> URI.</p>
+          <ul style="margin-top:28px;list-style:none;display:flex;flex-direction:column;gap:14px;">
+            <li style="display:flex;align-items:center;gap:12px;font-size:0.9rem;color:var(--text-2);">
+              <span style="width:22px;height:22px;border-radius:50%;background:var(--emerald-dim);border:1px solid var(--border-em);display:flex;align-items:center;justify-content:center;color:var(--emerald);font-size:0.7rem;flex-shrink:0;">✓</span>
+              Accepts raw Base32 secrets or full <code style="font-family:var(--mono);font-size:0.82em;background:rgba(255,255,255,0.07);color:var(--emerald-light);padding:1px 5px;border-radius:4px;">otpauth://totp/</code> URIs
+            </li>
+            <li style="display:flex;align-items:center;gap:12px;font-size:0.9rem;color:var(--text-2);">
+              <span style="width:22px;height:22px;border-radius:50%;background:var(--emerald-dim);border:1px solid var(--border-em);display:flex;align-items:center;justify-content:center;color:var(--emerald);font-size:0.7rem;flex-shrink:0;">✓</span>
+              Live countdown circle with colour-coded urgency warning
+            </li>
+            <li style="display:flex;align-items:center;gap:12px;font-size:0.9rem;color:var(--text-2);">
+              <span style="width:22px;height:22px;border-radius:50%;background:var(--emerald-dim);border:1px solid var(--border-em);display:flex;align-items:center;justify-content:center;color:var(--emerald);font-size:0.7rem;flex-shrink:0;">✓</span>
+              One-tap copy from vault card chip or edit drawer
+            </li>
+            <li style="display:flex;align-items:center;gap:12px;font-size:0.9rem;color:var(--text-2);">
+              <span style="width:22px;height:22px;border-radius:50%;background:var(--emerald-dim);border:1px solid var(--border-em);display:flex;align-items:center;justify-content:center;color:var(--emerald);font-size:0.7rem;flex-shrink:0;">✓</span>
+              Secret stored encrypted, never in plaintext
+            </li>
+          </ul>
+        </div>
+        <div class="reveal">
+          <div class="totp-demo">
+            <div class="totp-demo-header">Live 2FA Codes</div>
+            <div class="totp-account-row">
+              <div class="totp-logo">🐙</div>
+              <div class="totp-account-info">
+                <div class="totp-service">GitHub</div>
+                <div class="totp-user">kazam@gmail.com</div>
+              </div>
+              <div class="totp-live">
+                <div class="totp-code" id="demo-code">483 912</div>
+                <div class="totp-timer" id="demo-timer">⏱ 18s</div>
+              </div>
+            </div>
+            <div class="totp-account-row-muted">
+              <div class="totp-logo">🔐</div>
+              <div class="totp-account-info">
+                <div class="totp-service" style="font-size:0.82rem;font-weight:700;color:var(--text-1);margin-bottom:2px;">Google</div>
+                <div class="totp-user">kazam@gmail.com</div>
+              </div>
+              <div class="totp-live">
+                <div class="totp-code" id="demo-code2">271 049</div>
+                <div class="totp-timer" id="demo-timer2">⏱ 18s</div>
+              </div>
+            </div>
+            <div class="totp-account-row-muted">
+              <div class="totp-logo">🐦</div>
+              <div class="totp-account-info">
+                <div class="totp-service" style="font-size:0.82rem;font-weight:700;color:var(--text-1);margin-bottom:2px;">Twitter / X</div>
+                <div class="totp-user">@kazam_dev</div>
+              </div>
+              <div class="totp-live">
+                <div class="totp-code" id="demo-code3">904 317</div>
+                <div class="totp-timer" id="demo-timer3">⏱ 18s</div>
+              </div>
+            </div>
+            <!-- SVG countdown ring -->
+            <div style="display:flex;align-items:center;justify-content:center;margin-top:20px;gap:14px;">
+              <svg width="48" height="48" viewBox="0 0 36 36" style="transform:rotate(-90deg);">
+                <circle cx="18" cy="18" r="15.915" fill="none" stroke="rgba(16,185,129,0.15)" stroke-width="3.5"/>
+                <circle id="totp-ring" cx="18" cy="18" r="15.915" fill="none" stroke="#10b981" stroke-width="3.5" stroke-linecap="round"
+                  stroke-dasharray="100" stroke-dashoffset="40" class="progress-ring"/>
+              </svg>
+              <div style="font-size:0.78rem;color:var(--text-3);line-height:1.5;">
+                Codes auto-refresh<br/>every <strong style="color:var(--text-2);">30 seconds</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section class="security" id="security">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="security-inner">
+        <div class="reveal">
+          <div class="section-eyebrow">
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+            Security by design
+          </div>
+          <h2 class="section-title">Zero-knowledge.<br/>Zero excuses.</h2>
+          <p class="section-sub" style="margin-bottom:32px;">Every security decision in Toggle defaults to the most private option. The architecture makes it structurally impossible for anyone but you to access your vault.</p>
+          <a href="/app" class="btn-primary" style="width:fit-content;">
+            Inspect the source code
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </a>
+        </div>
+        <div class="reveal">
+          <table class="security-table">
+            <tr><td>Cipher</td><td>AES-256-GCM</td></tr>
+            <tr><td>KDF</td><td>PBKDF2-SHA256</td></tr>
+            <tr><td>Iterations</td><td>600,000</td></tr>
+            <tr><td>Salt</td><td>16 bytes · random per vault</td></tr>
+            <tr><td>IV</td><td>12 bytes · random per op</td></tr>
+            <tr><td>Key in RAM</td><td>Never persisted</td></tr>
+            <tr><td>Cloud storage</td><td>None</td></tr>
+            <tr><td>Biometric</td><td>WebAuthn key wrap</td></tr>
+            <tr><td>Breach check</td><td>k-Anonymity (HIBP)</td></tr>
+            <tr><td>Recovery</td><td>12-word mnemonic phrase</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON -->
+  <section class="compare" id="compare">
+    <div style="max-width:1100px;margin:0 auto;">
+      <div class="reveal">
+        <div class="section-eyebrow">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+          Side by side
+        </div>
+        <h2 class="section-title">Toggle vs. the alternatives.</h2>
+        <p class="section-sub">Why choose Toggle when there's 1Password, Bitwarden, and Google? Because no one else gives you this level of privacy control for free.</p>
+      </div>
+      <div class="compare-table-wrap reveal">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="highlight">Toggle ✦</th>
+              <th>Google Passwords</th>
+              <th>1Password</th>
+              <th>Bitwarden</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Local-only storage</td>
+              <td class="highlight"><span class="check">✓</span> Always</td>
+              <td><span class="cross">✗</span> Cloud sync</td>
+              <td><span class="cross">✗</span> Cloud sync</td>
+              <td><span class="partial">~</span> Self-host only</td>
+            </tr>
+            <tr>
+              <td>Zero-knowledge</td>
+              <td class="highlight"><span class="check">✓</span> Structural</td>
+              <td><span class="cross">✗</span> Google sees data</td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+            </tr>
+            <tr>
+              <td>No account required</td>
+              <td class="highlight"><span class="check">✓</span></td>
+              <td><span class="cross">✗</span> Google account</td>
+              <td><span class="cross">✗</span></td>
+              <td><span class="cross">✗</span></td>
+            </tr>
+            <tr>
+              <td>Built-in TOTP 2FA</td>
+              <td class="highlight"><span class="check">✓</span> RFC 6238</td>
+              <td><span class="cross">✗</span></td>
+              <td><span class="check">✓</span> Paid plan</td>
+              <td><span class="check">✓</span> Premium</td>
+            </tr>
+            <tr>
+              <td>Biometric unlock</td>
+              <td class="highlight"><span class="check">✓</span> WebAuthn</td>
+              <td><span class="check">✓</span></td>
+              <td><span class="check">✓</span></td>
+              <td><span class="partial">~</span> App only</td>
+            </tr>
+            <tr>
+              <td>Open source</td>
+              <td class="highlight"><span class="check">✓</span> 100%</td>
+              <td><span class="cross">✗</span></td>
+              <td><span class="cross">✗</span></td>
+              <td><span class="check">✓</span></td>
+            </tr>
+            <tr>
+              <td>Price</td>
+              <td class="highlight" style="color:var(--emerald);font-weight:700;">Free forever</td>
+              <td>Free</td>
+              <td>$3–5/mo</td>
+              <td>Free / $10/yr</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="reveal">
+      <h2 class="cta-title">
+        Take back control<br/>
+        of your <span style="background:linear-gradient(135deg,#10b981,#34d399,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">digital identity.</span>
+      </h2>
+      <p class="cta-sub">Your passwords are yours. Keep them that way. Start using Toggle today — no sign-up, no cloud, no compromise.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;">
+        <a href="/app" class="btn-primary" style="font-size:1.05rem;padding:16px 36px;">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Open My Vault
+        </a>
+        <a href="https://github.com/your-username/toggle-password-manager" class="btn-secondary" style="font-size:1.05rem;padding:16px 32px;" target="_blank">
+          Star on GitHub ⭐
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path fill="#10b981" d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm0 4a3 3 0 013 3c0 1.3-.84 2.4-2 2.82V15a1 1 0 11-2 0v-3.18A3.001 3.001 0 0112 6z"/></svg>
+      Toggle<span>.</span>
+    </div>
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#security">Security</a>
+      <a href="#compare">Compare</a>
+      <a href="/app">Open App</a>
+      <a href="https://github.com/your-username/toggle-password-manager" target="_blank">GitHub</a>
+    </div>
+    <div class="footer-copy">MIT License · Built with ❤️ · Zero-knowledge · Local-first</div>
+  </footer>
+
+  <script>
+    // ── Scroll reveal ──────────────────────────────────────
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => io.observe(el));
+
+    // ── Nav background on scroll ───────────────────────────
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      nav.style.background = window.scrollY > 20
+        ? 'rgba(8, 11, 17, 0.97)'
+        : 'rgba(8, 11, 17, 0.85)';
+    }, { passive: true });
+
+    // ── Live TOTP countdown demo ───────────────────────────
+    function updateTOTPDemo() {
+      const now = Math.floor(Date.now() / 1000);
+      const rem = 30 - (now % 30);
+      const pct = (rem / 30) * 100;
+
+      // update ring dashoffset (100 = full, 0 = empty)
+      const ring = document.getElementById('totp-ring');
+      if (ring) ring.style.strokeDashoffset = 100 - pct;
+
+      // update timer labels
+      ['demo-timer', 'demo-timer2', 'demo-timer3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = `⏱ ${rem}s`;
+      });
+
+      // colour shift when urgent
+      const codeEl = document.getElementById('demo-code');
+      if (codeEl) {
+        codeEl.style.color = rem <= 5 ? '#f87171' : rem <= 10 ? '#fbbf24' : '#10b981';
+      }
+    }
+
+    setInterval(updateTOTPDemo, 1000);
+    updateTOTPDemo();
+
+    // ── Smooth anchor scrolling with offset ───────────────
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href').slice(1);
+        const target = document.getElementById(id);
+        if (target) {
+          e.preventDefault();
+          window.scrollTo({ top: target.offsetTop - 72, behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

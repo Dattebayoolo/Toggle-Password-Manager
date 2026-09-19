@@ -44,7 +44,15 @@ const server = http.createServer((req, res) => {
     return res.end('Bad Request');
   }
 
-  let filePath = path.join(PUBLIC_DIR, safeUrl === '/' ? 'index.html' : safeUrl);
+  // Route: / → landing.html (marketing page), /app → main vault app
+  let filePath;
+  if (safeUrl === '/') {
+    filePath = path.join(PUBLIC_DIR, 'landing.html');
+  } else if (safeUrl === '/app' || safeUrl === '/app/') {
+    filePath = path.join(PUBLIC_DIR, 'index.html');
+  } else {
+    filePath = path.join(PUBLIC_DIR, safeUrl);
+  }
 
   // Security: prevent path traversal out of PUBLIC_DIR
   if (!filePath.startsWith(PUBLIC_DIR)) {
