@@ -40,23 +40,45 @@ export class UI {
   }
 
   /**
-   * Copies text to clipboard with secure 30-second auto-clear countdown banner
+   * Copies text to clipboard with secure 30-second auto-clear countdown banner.
+   * Uses navigator.clipboard API with a textarea fallback for legacy browsers
+   * (document.execCommand is deprecated and removed in some environments).
    */
   static async copySecure(text, label = 'Password') {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (e) {
-      // Fallback
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
+    let copied = false;
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      } catch (e) {
+        // Clipboard API may be rejected (e.g. non-secure context) — fall through
+      }
     }
 
-    this.showToast(`${label} copied to clipboard!`, 'success');
-    this.startClipboardCountdown(30);
+    if (!copied) {
+      // Legacy fallback: textarea + execCommand (deprecated but still widely supported)
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        copied = true;
+      } catch (e) {
+        // Both methods failed
+      }
+    }
+
+    if (copied) {
+      this.showToast(`${label} copied to clipboard!`, 'success');
+      this.startClipboardCountdown(30);
+    } else {
+      this.showToast('Could not copy — please copy manually.', 'danger');
+    }
   }
 
   /**
@@ -118,7 +140,9 @@ export class UI {
   }
 
   /**
-   * Generates a stylized initials avatar or favicon element
+   * Generates a stylized initials avatar or favicon element.
+   * The `initial` character is properly escaped before being embedded in
+   * onerror attribute HTML to prevent XSS via crafted account names.
    */
   static renderAvatar(name = '', url = '') {
     let hostname = '';
@@ -130,21 +154,23 @@ export class UI {
     }
 
     const cleanName = (name || hostname || 'Account').trim();
-    const initial = cleanName.charAt(0).toUpperCase();
+    const initial = this.escapeHTML(cleanName.charAt(0).toUpperCase());
+    const safeTitle = this.escapeHTML(cleanName);
 
     // If there is a hostname, use DuckDuckGo favicon service with graceful fallback to letter
     if (hostname && !hostname.includes('localhost')) {
+      // The onerror uses the pre-escaped `initial` — safe to embed in attribute context
       return `
-        <div class="vault-card-avatar" title="${this.escapeHTML(cleanName)}">
+        <div class="vault-card-avatar" title="${safeTitle}">
           <img src="https://icons.duckduckgo.com/ip3/${hostname}.ico" 
-               onerror="this.onerror=null; this.parentElement.innerHTML='${initial}';" 
+               onerror="this.onerror=null; this.parentElement.textContent='${initial}';" 
                alt="${initial}" loading="lazy" />
         </div>
       `;
     }
 
     return `
-      <div class="vault-card-avatar" title="${this.escapeHTML(cleanName)}">
+      <div class="vault-card-avatar" title="${safeTitle}">
         ${initial}
       </div>
     `;
@@ -162,7 +188,7 @@ export class UI {
         <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encoded}" 
              alt="QR Code" 
              style="border-radius:8px;border:4px solid #fff;"
-             onerror="this.parentElement.innerHTML='<div style=\'color:var(--text-muted);font-size:0.8rem;padding:20px;\'>Connect device to scan or copy text manually.</div>'" />
+             onerror="this.parentElement.innerHTML='<div style=\\'color:var(--text-muted);font-size:0.8rem;padding:20px;\\'>Connect device to scan or copy text manually.</div>'" />
       </div>
     `;
   }

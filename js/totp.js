@@ -3,13 +3,30 @@
  * Implements RFC 6238 (TOTP) and RFC 4226 (HOTP) using standard Web Crypto API.
  */
 
+// Cache crypto reference once at module level — avoids repeated typeof checks on every call
+const _crypto = globalThis.crypto ?? window.crypto;
+
 export class TOTPEngine {
   static DEFAULT_PERIOD = 30;
   static DEFAULT_DIGITS = 6;
   static BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
   /**
-   * Decodes a RFC 4648 Base32 string into a Uint8Array byte buffer
+   * Precomputed O(1) Base32 character lookup table.
+   * Replaces the O(32) indexOf call in base32ToBuffer per character.
+   */
+  static #base32Lookup = (() => {
+    const table = new Uint8Array(256).fill(0xff); // 0xff = invalid
+    const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    for (let i = 0; i < alpha.length; i++) {
+      table[alpha.charCodeAt(i)] = i;
+    }
+    return table;
+  })();
+
+  /**
+   * Decodes a RFC 4648 Base32 string into a Uint8Array byte buffer.
+   * Uses a precomputed lookup table for O(1) character resolution.
    */
   static base32ToBuffer(base32Str) {
     if (!base32Str || typeof base32Str !== 'string') {
@@ -27,8 +44,8 @@ export class TOTPEngine {
     const output = [];
 
     for (let i = 0; i < clean.length; i++) {
-      const idx = this.BASE32_ALPHABET.indexOf(clean[i]);
-      if (idx === -1) {
+      const idx = this.#base32Lookup[clean.charCodeAt(i)];
+      if (idx === 0xff) {
         throw new Error(`Invalid character "${clean[i]}" in Base32 secret`);
       }
 
@@ -123,10 +140,8 @@ export class TOTPEngine {
     counterView.setUint32(0, Math.floor(counter / 0x100000000), false); // High 32 bits
     counterView.setUint32(4, counter >>> 0, false);                      // Low 32 bits
 
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
-
     // Import HMAC key
-    const hmacKey = await cryptoObj.subtle.importKey(
+    const hmacKey = await _crypto.subtle.importKey(
       'raw',
       keyBytes,
       { name: 'HMAC', hash: { name: 'SHA-1' } },
@@ -135,7 +150,7 @@ export class TOTPEngine {
     );
 
     // Calculate HMAC-SHA-1
-    const hmacResult = await cryptoObj.subtle.sign('HMAC', hmacKey, counterBuffer);
+    const hmacResult = await _crypto.subtle.sign('HMAC', hmacKey, counterBuffer);
     const hmacBytes = new Uint8Array(hmacResult);
 
     // RFC 4226 Dynamic Truncation
@@ -146,7 +161,8 @@ export class TOTPEngine {
       ((hmacBytes[offset + 2] & 0xff) << 8) |
       (hmacBytes[offset + 3] & 0xff);
 
-    const modulo = Math.pow(10, digits);
+    // Use ** operator instead of Math.pow for integer exponentiation
+    const modulo = 10 ** digits;
     const token = binary % modulo;
 
     return token.toString().padStart(digits, '0');

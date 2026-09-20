@@ -3,6 +3,9 @@
  * CSPRNG-powered high-entropy password creation and strength metrics.
  */
 
+// Cache crypto reference once at module level — avoids repeated typeof checks on every call
+const _crypto = globalThis.crypto ?? window.crypto;
+
 export class GeneratorEngine {
   static CHAR_UPPER = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // Ambiguous I, O excluded by default if flag checked
   static CHAR_UPPER_ALL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -55,33 +58,34 @@ export class GeneratorEngine {
     if (uppercase) {
       const set = avoidAmbiguous ? this.CHAR_UPPER : this.CHAR_UPPER_ALL;
       pool += set;
-      guaranteed.push(this.getRandomChar(set));
+      guaranteed.push(this._randomCharFrom(set));
     }
     if (lowercase) {
       const set = avoidAmbiguous ? this.CHAR_LOWER : this.CHAR_LOWER_ALL;
       pool += set;
-      guaranteed.push(this.getRandomChar(set));
+      guaranteed.push(this._randomCharFrom(set));
     }
     if (numbers) {
       const set = avoidAmbiguous ? this.CHAR_DIGITS : this.CHAR_DIGITS_ALL;
       pool += set;
-      guaranteed.push(this.getRandomChar(set));
+      guaranteed.push(this._randomCharFrom(set));
     }
     if (symbols) {
       pool += this.CHAR_SYMBOLS;
-      guaranteed.push(this.getRandomChar(this.CHAR_SYMBOLS));
+      guaranteed.push(this._randomCharFrom(this.CHAR_SYMBOLS));
     }
 
     if (!pool) {
       pool = this.CHAR_LOWER_ALL;
-      guaranteed.push(this.getRandomChar(pool));
+      guaranteed.push(this._randomCharFrom(pool));
     }
 
     const remainingCount = Math.max(0, length - guaranteed.length);
     const randomChars = [];
+
+    // Single getRandomValues call for all remaining characters
     const randomBytes = new Uint32Array(remainingCount);
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
-    cryptoObj.getRandomValues(randomBytes);
+    _crypto.getRandomValues(randomBytes);
 
     for (let i = 0; i < remainingCount; i++) {
       randomChars.push(pool[randomBytes[i] % pool.length]);
@@ -97,9 +101,10 @@ export class GeneratorEngine {
    */
   static generatePassphrase(wordCount = 4, separator = '-', capitalize = true, addNumber = true) {
     const count = Math.max(3, Math.min(wordCount, 8));
+
+    // Single getRandomValues call for all word indices
     const randomIndices = new Uint32Array(count);
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
-    cryptoObj.getRandomValues(randomIndices);
+    _crypto.getRandomValues(randomIndices);
 
     const words = [];
     for (let i = 0; i < count; i++) {
@@ -112,7 +117,7 @@ export class GeneratorEngine {
 
     if (addNumber) {
       const numByte = new Uint8Array(1);
-      cryptoObj.getRandomValues(numByte);
+      _crypto.getRandomValues(numByte);
       const randomNum = (numByte[0] % 90 + 10).toString(); // 10-99
       words[words.length - 1] += randomNum;
     }
@@ -120,19 +125,34 @@ export class GeneratorEngine {
     return words.join(separator);
   }
 
+  /**
+   * Returns a single random character from the given string.
+   * Internal helper — renamed with underscore to signal private intent.
+   */
   static getRandomChar(str) {
+    return this._randomCharFrom(str);
+  }
+
+  static _randomCharFrom(str) {
     const rand = new Uint32Array(1);
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
-    cryptoObj.getRandomValues(rand);
+    _crypto.getRandomValues(rand);
     return str[rand[0] % str.length];
   }
 
+  /**
+   * Fisher-Yates shuffle using a single batched getRandomValues call.
+   * Previously made N individual getRandomValues calls (one per swap) — now does one.
+   */
   static shuffleArray(arr) {
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
-    for (let i = arr.length - 1; i > 0; i--) {
-      const rand = new Uint32Array(1);
-      cryptoObj.getRandomValues(rand);
-      const j = rand[0] % (i + 1);
+    const n = arr.length;
+    if (n <= 1) return arr;
+
+    // Generate all random values in one call
+    const randoms = new Uint32Array(n - 1);
+    _crypto.getRandomValues(randoms);
+
+    for (let i = n - 1; i > 0; i--) {
+      const j = randoms[n - 1 - i] % (i + 1);
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;

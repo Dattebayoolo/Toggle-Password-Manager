@@ -1,6 +1,7 @@
-// Toggle Password Manager - Service Worker (v3.0)
+// Toggle Password Manager - Service Worker (v4.0)
 // High-resilience offline-first cache with network-first runtime updates
-const CACHE_NAME = 'toggle-vault-v3';
+// v4: Added totp.js to core assets; fixed undefined values in activate Promise.all
+const CACHE_NAME = 'toggle-vault-v4';
 
 const CORE_ASSETS = [
   './',
@@ -15,6 +16,7 @@ const CORE_ASSETS = [
   './js/generator.js',
   './js/security.js',
   './js/importer.js',
+  './js/totp.js',
   './js/ui.js'
 ];
 
@@ -35,11 +37,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+        // Filter out undefined — keys matching CACHE_NAME return no delete promise
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
       );
     }).then(() => self.clients.claim())
   );

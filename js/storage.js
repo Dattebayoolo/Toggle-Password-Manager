@@ -1,6 +1,7 @@
 /**
  * Toggle Password Manager - Persistent IndexedDB Storage Engine
  * Stores encrypted vault items, cryptographic salts, and local preferences.
+ * Uses a cached singleton IDB connection to avoid re-opening on every call.
  */
 
 import { CryptoEngine } from './crypto.js';
@@ -9,8 +10,14 @@ export class StorageEngine {
   static DB_NAME = 'ToggleVaultDB';
   static DB_VERSION = 1;
 
-  static async getDB() {
-    return new Promise((resolve, reject) => {
+  // Singleton promise — resolves to the open IDBDatabase connection.
+  // All methods share this; the connection is opened at most once per page load.
+  static #dbPromise = null;
+
+  static getDB() {
+    if (this.#dbPromise) return this.#dbPromise;
+
+    this.#dbPromise = new Promise((resolve, reject) => {
       const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
 
       request.onupgradeneeded = (event) => {
@@ -27,8 +34,13 @@ export class StorageEngine {
       };
 
       request.onsuccess = (event) => resolve(event.target.result);
-      request.onerror = (event) => reject(event.target.error);
+      request.onerror = (event) => {
+        this.#dbPromise = null; // allow retry on failure
+        reject(event.target.error);
+      };
     });
+
+    return this.#dbPromise;
   }
 
   /**
@@ -60,8 +72,9 @@ export class StorageEngine {
     const verifierHash = await CryptoEngine.hashString(masterPassword, saltHex);
     const recoveryHash = await CryptoEngine.hashString(recoveryPhrase, saltHex);
 
-    const key = await CryptoEngine.deriveKey(masterPassword, salt);
-    
+    // Derive key — extractable=true needed here so we can return it to the caller
+    const key = await CryptoEngine.deriveKey(masterPassword, salt, undefined, true);
+
     // Initial empty vault array
     const emptyVault = [];
     const encrypted = await CryptoEngine.encrypt(JSON.stringify(emptyVault), key);
@@ -122,6 +135,7 @@ export class StorageEngine {
     }
 
     const salt = CryptoEngine.hexToBuffer(meta.saltHex);
+    // extractable=false — session key never needs to leave memory
     const key = await CryptoEngine.deriveKey(masterPassword, salt);
     return key;
   }
@@ -153,9 +167,9 @@ export class StorageEngine {
     const newVerifierHash = await CryptoEngine.hashString(newMasterPassword, newSaltHex);
     const newRecoveryHash = await CryptoEngine.hashString(cleanPhrase, newSaltHex);
 
+    // extractable=false — session key never needs to leave memory
     const newKey = await CryptoEngine.deriveKey(newMasterPassword, newSalt);
 
-    // Load existing data with old key isn't possible directly from recovery without saving recovery encrypted key or reset.
     // For local security best-practice: if user lost master password, prompt to re-encrypt or start fresh.
     // Here we update meta with new master password:
     await new Promise((resolve, reject) => {
@@ -312,9 +326,13 @@ export class StorageEngine {
   }
 
   /**
-   * Erase all local vault data completely (Factory Reset)
+   * Erase all local vault data completely (Factory Reset).
+   * Also resets the cached DB singleton so subsequent calls re-open cleanly.
    */
   static async wipeAllData() {
+    // Reset singleton before wiping so the next getDB() re-opens fresh
+    this.#dbPromise = null;
+
     return new Promise((resolve, reject) => {
       const req = indexedDB.deleteDatabase(this.DB_NAME);
       req.onsuccess = () => resolve();

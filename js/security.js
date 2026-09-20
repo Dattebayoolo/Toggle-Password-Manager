@@ -8,6 +8,10 @@
 import { GeneratorEngine } from './generator.js';
 import { CryptoEngine } from './crypto.js';
 
+// Pre-extracted constant to avoid repeated arithmetic in the hot audit loop
+const DAY_MS = 24 * 60 * 60 * 1000;
+const NINETY_DAYS_MS = 90 * DAY_MS;
+
 export class SecurityEngine {
   static COMMON_COMPROMISED_PATTERNS = [
     'password', '123456', '12345678', '123456789', 'qwerty', '111111',
@@ -27,7 +31,6 @@ export class SecurityEngine {
     const oldItems = [];
 
     const now = Date.now();
-    const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 
     logins.forEach(item => {
       const pwd = item.password || '';
@@ -75,7 +78,7 @@ export class SecurityEngine {
       if (item.updatedAt) {
         const itemDate = new Date(item.updatedAt).getTime();
         if (now - itemDate > NINETY_DAYS_MS) {
-          const daysOld = Math.floor((now - itemDate) / (24 * 60 * 60 * 1000));
+          const daysOld = Math.floor((now - itemDate) / DAY_MS);
           oldItems.push({
             item,
             daysOld
@@ -165,7 +168,8 @@ export class SecurityEngine {
     try {
       const sha1Hex = await CryptoEngine.hashSHA1(password);
       const prefix = sha1Hex.slice(0, 5);
-      const suffix = sha1Hex.slice(5);
+      // Ensure local suffix is uppercase to match HIBP response format
+      const suffix = sha1Hex.slice(5).toUpperCase();
 
       const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
         method: 'GET',
@@ -181,7 +185,7 @@ export class SecurityEngine {
 
       for (const line of lines) {
         const [hashSuffix, countStr] = line.split(':');
-        if (hashSuffix && hashSuffix.toUpperCase() === suffix) {
+        if (hashSuffix && hashSuffix === suffix) {
           return parseInt(countStr, 10) || 0;
         }
       }
@@ -200,6 +204,10 @@ export class SecurityEngine {
    * Batch live breach scanner — asynchronously evaluates all login passwords
    * against HaveIBeenPwned using k-Anonymity, with real-time progress callbacks.
    * 
+   * Deduplicates by password value before scanning: if multiple accounts share
+   * the same password, only ONE API call is made and the result is propagated to
+   * all matching items. This can drastically reduce scan time and API usage.
+   * 
    * @param {Array} items - vault items (filters to logins with passwords)
    * @param {Function} onProgress - callback({current, total, item, breachCount})
    * @returns {Promise<Array>} - array of {item, breachCount} for items found in breaches
@@ -209,25 +217,42 @@ export class SecurityEngine {
     const breachedItems = [];
     const THROTTLE_MS = 150; // Respect HIBP rate limit (max ~10 req/sec)
 
-    for (let i = 0; i < logins.length; i++) {
-      const item = logins[i];
+    // Deduplicate passwords — map unique password -> [items using it]
+    const passwordMap = new Map();
+    for (const item of logins) {
+      if (!passwordMap.has(item.password)) {
+        passwordMap.set(item.password, []);
+      }
+      passwordMap.get(item.password).push(item);
+    }
+
+    const uniquePasswords = [...passwordMap.keys()];
+    let processed = 0;
+
+    for (let i = 0; i < uniquePasswords.length; i++) {
+      const pwd = uniquePasswords[i];
+      const matchingItems = passwordMap.get(pwd);
 
       // Throttle requests to avoid HIBP rate limiting
       if (i > 0) {
         await new Promise(resolve => setTimeout(resolve, THROTTLE_MS));
       }
 
-      const breachCount = await this.checkPwnedPassword(item.password);
+      const breachCount = await this.checkPwnedPassword(pwd);
 
-      onProgress({
-        current: i + 1,
-        total: logins.length,
-        item,
-        breachCount
-      });
+      // Report progress for each item sharing this password
+      for (const item of matchingItems) {
+        processed++;
+        onProgress({
+          current: processed,
+          total: logins.length,
+          item,
+          breachCount
+        });
 
-      if (breachCount > 0) {
-        breachedItems.push({ item, breachCount });
+        if (breachCount > 0) {
+          breachedItems.push({ item, breachCount });
+        }
       }
     }
 

@@ -4,6 +4,9 @@
  * Zero-knowledge, zero-telemetry client-side encryption.
  */
 
+// Cache crypto reference once at module level — avoids repeated typeof checks on every call
+const _crypto = globalThis.crypto ?? window.crypto;
+
 export class CryptoEngine {
   static PBKDF2_ITERATIONS = 600000;
   static SALT_LENGTH = 16; // 128 bits
@@ -14,18 +17,21 @@ export class CryptoEngine {
    */
   static getRandomBytes(length) {
     const bytes = new Uint8Array(length);
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
-    cryptoObj.getRandomValues(bytes);
+    _crypto.getRandomValues(bytes);
     return bytes;
   }
 
   /**
-   * Converts Uint8Array to Hex string
+   * Converts Uint8Array / ArrayBuffer to Hex string
+   * Avoids Array.from() intermediate allocation — iterates Uint8Array directly.
    */
   static bufferToHex(buffer) {
-    return Array.from(new Uint8Array(buffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    const bytes = new Uint8Array(buffer);
+    let hex = '';
+    for (let i = 0; i < bytes.length; i++) {
+      hex += bytes[i].toString(16).padStart(2, '0');
+    }
+    return hex;
   }
 
   /**
@@ -37,14 +43,16 @@ export class CryptoEngine {
   }
 
   /**
-   * Converts Uint8Array to Base64
+   * Converts Uint8Array / ArrayBuffer to Base64
+   * Uses chunked spread to avoid call-stack limits on large buffers while
+   * still avoiding the slow character-by-character string concatenation.
    */
   static bufferToBase64(buffer) {
-    let binary = '';
     const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
+    const CHUNK = 8192;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
     }
     return typeof btoa !== 'undefined' ? btoa(binary) : Buffer.from(binary, 'binary').toString('base64');
   }
@@ -62,12 +70,13 @@ export class CryptoEngine {
   }
 
   /**
-   * Derives an AES-GCM CryptoKey from a master password and salt using PBKDF2
+   * Derives an AES-GCM CryptoKey from a master password and salt using PBKDF2.
+   * Defaults to non-extractable for in-memory session keys — pass extractable=true
+   * only when you need to export the key (e.g. exportKeyRaw).
    */
-  static async deriveKey(password, saltUint8, iterations = this.PBKDF2_ITERATIONS, extractable = true) {
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
+  static async deriveKey(password, saltUint8, iterations = this.PBKDF2_ITERATIONS, extractable = false) {
     const enc = new TextEncoder();
-    const passwordKey = await cryptoObj.subtle.importKey(
+    const passwordKey = await _crypto.subtle.importKey(
       'raw',
       enc.encode(password),
       { name: 'PBKDF2' },
@@ -75,7 +84,7 @@ export class CryptoEngine {
       ['deriveKey']
     );
 
-    return await cryptoObj.subtle.deriveKey(
+    return await _crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
         salt: saltUint8,
@@ -93,8 +102,7 @@ export class CryptoEngine {
    * Exports an extractable CryptoKey to Base64 raw key bytes
    */
   static async exportKeyRaw(key) {
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
-    const raw = await cryptoObj.subtle.exportKey('raw', key);
+    const raw = await _crypto.subtle.exportKey('raw', key);
     return this.bufferToBase64(raw);
   }
 
@@ -102,9 +110,8 @@ export class CryptoEngine {
    * Imports a raw Base64 key into an AES-GCM CryptoKey
    */
   static async importKeyRaw(base64Raw, extractable = true) {
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
     const buffer = this.base64ToBuffer(base64Raw);
-    return await cryptoObj.subtle.importKey(
+    return await _crypto.subtle.importKey(
       'raw',
       buffer,
       { name: 'AES-GCM', length: 256 },
@@ -117,10 +124,9 @@ export class CryptoEngine {
    * Generates a SHA-1 hash (uppercase hex) for k-Anonymity HaveIBeenPwned queries
    */
   static async hashSHA1(input) {
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
     const enc = new TextEncoder();
     const data = enc.encode(input);
-    const hash = await cryptoObj.subtle.digest('SHA-1', data);
+    const hash = await _crypto.subtle.digest('SHA-1', data);
     return this.bufferToHex(hash).toUpperCase();
   }
 
@@ -128,10 +134,9 @@ export class CryptoEngine {
    * Generates a SHA-256 hash for verifying master password without storing raw text
    */
   static async hashString(input, saltHex = '') {
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
     const enc = new TextEncoder();
     const data = enc.encode(input + saltHex);
-    const hash = await cryptoObj.subtle.digest('SHA-256', data);
+    const hash = await _crypto.subtle.digest('SHA-256', data);
     return this.bufferToHex(hash);
   }
 
@@ -140,12 +145,11 @@ export class CryptoEngine {
    * Returns: { ciphertext: base64, iv: hex }
    */
   static async encrypt(plaintext, key) {
-    const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
     const iv = this.getRandomBytes(this.IV_LENGTH);
     const enc = new TextEncoder();
     const encodedData = enc.encode(plaintext);
 
-    const ciphertextBuffer = await cryptoObj.subtle.encrypt(
+    const ciphertextBuffer = await _crypto.subtle.encrypt(
       {
         name: 'AES-GCM',
         iv: iv
@@ -165,11 +169,10 @@ export class CryptoEngine {
    */
   static async decrypt(ciphertextBase64, ivHex, key) {
     try {
-      const cryptoObj = typeof crypto !== 'undefined' ? crypto : window.crypto;
       const ciphertextBuffer = this.base64ToBuffer(ciphertextBase64);
       const iv = this.hexToBuffer(ivHex);
 
-      const decryptedBuffer = await cryptoObj.subtle.decrypt(
+      const decryptedBuffer = await _crypto.subtle.decrypt(
         {
           name: 'AES-GCM',
           iv: iv
@@ -186,7 +189,8 @@ export class CryptoEngine {
   }
 
   /**
-   * Generates a 12-word Emergency Recovery Phrase
+   * Generates a 12-word Emergency Recovery Phrase.
+   * Uses Uint16Array to minimise modulo bias across the ~130-word list.
    */
   static generateRecoveryPhrase() {
     const wordList = [
@@ -207,11 +211,18 @@ export class CryptoEngine {
       'bleach', 'blend', 'bless', 'blind', 'block', 'blonde', 'bloom', 'blossom', 'blueberry'
     ];
 
+    // Uint16Array (0–65535 range) minimises modulo bias for lists ≤ 256 entries.
+    // Rejection-sample any value that would cause bias.
+    const MAX_UNBIASED = Math.floor(65536 / wordList.length) * wordList.length;
     const phraseWords = [];
-    const randomBytes = this.getRandomBytes(12);
-    for (let i = 0; i < 12; i++) {
-      const index = randomBytes[i] % wordList.length;
-      phraseWords.push(wordList[index]);
+    while (phraseWords.length < 12) {
+      const buf = new Uint16Array(12);
+      _crypto.getRandomValues(buf);
+      for (let i = 0; i < buf.length && phraseWords.length < 12; i++) {
+        if (buf[i] < MAX_UNBIASED) {
+          phraseWords.push(wordList[buf[i] % wordList.length]);
+        }
+      }
     }
     return phraseWords.join(' ');
   }

@@ -25,7 +25,7 @@ async function runTests() {
   assert(salt.length === 16, 'Random salt generation produces 16 bytes');
 
   const masterPass = 'SuperSecretVaultMasterPass2026!';
-  const key = await CryptoEngine.deriveKey(masterPass, salt, 10000); // 10k iterations for fast unit test
+  const key = await CryptoEngine.deriveKey(masterPass, salt, 10000, true); // 10k iterations for fast unit test; extractable=true needed for exportKeyRaw test below
   assert(key !== null && key.algorithm.name === 'AES-GCM', 'Derives valid AES-GCM CryptoKey from master password');
 
   // Test Encryption & Decryption
